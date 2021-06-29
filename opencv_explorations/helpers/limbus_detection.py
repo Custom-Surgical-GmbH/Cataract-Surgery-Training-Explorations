@@ -2,6 +2,8 @@
 import cv2
 import numpy as np
 
+from .misc import get_in_out_intensity_diff
+
 def detect_limbus(gray, return_all=False, validation='first', considered_ratio_s=0.05):
     circles = cv2.HoughCircles(
         cv2.GaussianBlur(255 - gray, ksize=(0,0), sigmaX=2),
@@ -37,21 +39,5 @@ def detect_limbus(gray, return_all=False, validation='first', considered_ratio_s
             
         best_circle_index = np.argmax(in_out_diff_intensities)
         return considered_circles[best_circle_index]
-
-
-CIRCLE_WIDTH_TO_RADIUS_RATIO = 0.04
-def get_in_out_intensity_diff(grey, center, radius):
-    mask = np.zeros(grey.shape, dtype=np.byte)
-    circle_width = int(CIRCLE_WIDTH_TO_RADIUS_RATIO*radius)
-    
-    cv2.circle(mask, center, radius - (circle_width//2), 1, thickness=circle_width)
-    in_intensity = np.mean(grey[mask == 1])
-    
-    cv2.circle(mask, center, radius + (circle_width//2), 1, thickness=circle_width)
-    out_intensity = np.mean(grey[mask == 1])
-    
-    return out_intensity - in_intensity
-
-
 
 
