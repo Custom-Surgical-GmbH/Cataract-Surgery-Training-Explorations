@@ -4,7 +4,10 @@ import numpy as np
 
 from .misc import get_in_out_intensity_diff
 
-def detect_limbus(gray, return_all=False, validation='first', considered_ratio_s=0.05, validation_value_thresh=None):
+def detect_limbus(gray, return_all=False, validation='first', considered_ratio_s=0.05, 
+        validation_mode='max', validation_value_thresh=None, view_mask=None):
+    assert validation_mode in ('min', 'max'), 'validation_mode \'%s\' is not supported' % validation_mode
+
     circles = cv2.HoughCircles(
         cv2.GaussianBlur(255 - gray, ksize=(0,0), sigmaX=2),
         cv2.HOUGH_GRADIENT, dp=1, minDist=1,
@@ -34,12 +37,23 @@ def detect_limbus(gray, return_all=False, validation='first', considered_ratio_s
             in_out_diff_intensities[index] = get_in_out_intensity_diff(
                 gray,
                 tuple(np.around(circle[:2]).astype('int')),
-                np.round(circle[2]).astype('int')
+                np.round(circle[2]).astype('int'),
+                view_mask=view_mask
             )
             
         # print('max_value ', np.max(in_out_diff_intensities))
-        if validation_value_thresh is None or np.max(in_out_diff_intensities) > validation_value_thresh:
-            best_circle_index = np.argmax(in_out_diff_intensities)
-            return considered_circles[best_circle_index]
-        else:
-            return None
+        optimal_value = None
+        if validation_mode == 'min':
+            optimal_value = np.min(in_out_diff_intensities)
+            if validation_value_thresh is not None and optimal_value > validation_value_thresh:
+                return None
+            else:
+                best_circle_index = np.argmin(in_out_diff_intensities)
+        elif validation_mode == 'max':
+            optimal_value = np.max(in_out_diff_intensities)
+            if validation_value_thresh is not None and optimal_value < validation_value_thresh:
+                return None
+            else:
+                best_circle_index = np.argmax(in_out_diff_intensities)
+
+        return considered_circles[best_circle_index]
