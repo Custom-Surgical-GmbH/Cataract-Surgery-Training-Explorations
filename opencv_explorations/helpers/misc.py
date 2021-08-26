@@ -53,7 +53,17 @@ def get_in_out_intensity_diff(grey, center, radius):
     cv2.circle(mask, center, radius - (circle_width//2), 1, thickness=circle_width)
     in_intensity = np.mean(grey[mask == 1])
     
+    mask = np.zeros(grey.shape, dtype=np.byte)
     cv2.circle(mask, center, radius + (circle_width//2), 1, thickness=circle_width)
     out_intensity = np.mean(grey[mask == 1])
     
     return out_intensity - in_intensity
+
+# def jiggle_circle(grey, best_circle, mode='min', max_iter=5, return_intermediates=False):
+#     new_best_circle = np.copy(best_circle)
+#     for _ in range(max_iter):
+#         mask = np.zeros(grey.shape, dtype=np.byte)
+#         circle_width = round(CIRCLE_WIDTH_TO_RADIUS_RATIO*new_best_circle[2])
+#         cv2.circle(mask, (new_best_circle[0], new_best_circle[1]), 
+#             radius + circle_width//2, 1, thickness=circle_width)
+        
