@@ -44,13 +44,13 @@ def detect_limbus(gray, return_all=False, validation='first', considered_ratio_s
         # print('max_value ', np.max(in_out_diff_intensities))
         optimal_value = None
         if validation_mode == 'min':
-            optimal_value = np.min(in_out_diff_intensities)
+            optimal_value = np.nanmin(in_out_diff_intensities)
             if validation_value_thresh is not None and optimal_value > validation_value_thresh:
                 return None
             else:
                 best_circle_index = np.argmin(in_out_diff_intensities)
         elif validation_mode == 'max':
-            optimal_value = np.max(in_out_diff_intensities)
+            optimal_value = np.nanmax(in_out_diff_intensities)
             if validation_value_thresh is not None and optimal_value < validation_value_thresh:
                 return None
             else:
