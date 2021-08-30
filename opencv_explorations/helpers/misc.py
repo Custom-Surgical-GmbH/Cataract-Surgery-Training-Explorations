@@ -114,7 +114,7 @@ def jiggle_circle(grey, best_circle, mode='min', max_iter=30, alpha=0.2, strip_w
             cv2.circle(im_new, (round(circle[0]), round(circle[1])), round(circle[2]) + strip_width//2, 255, strip_width)
             intermediates.append(im_new)
 
-    print('jiggle_circle iters:', i)
+    # print('jiggle_circle iters:', i)
 
     mean_value = moments['m00']/cv2.countNonZero(mask)
     if return_mean_value and not return_intermediates:
@@ -126,24 +126,25 @@ def jiggle_circle(grey, best_circle, mode='min', max_iter=30, alpha=0.2, strip_w
     else:
         return circle
 
-def tighten_circle(grey, best_circle, mode='min', max_iter=30, alpha=0.2, beta=0.95, strip_width_to_radius_ratio=0.04,
+def tighten_circle(grey, best_circle, mode='min', max_iter=30, alpha=0.2, beta=0.97, strip_width_to_radius_ratio=0.04,
         max_change_ratio=0.8, initial_bump_up=1.1, return_intermediates=False, view_mask=None):
     assert 0 < beta < 1.0, 'beta \'%f\' has a wrong value' % beta
     assert 0 < max_change_ratio < 1.0, 'max_change_ratio \'%f\' has a wrong value' % max_change_ratio
 
     intermediates = []
     grey = grey.copy()
-    circle = np.copy(best_circle).astype('float32')
-    circle[2] *= initial_bump_up
+    new_circle = np.copy(best_circle).astype('float32')
+    new_circle[2] *= initial_bump_up
+    circle = None
     last_value = None
 
     # center
     for i in range(max_iter + 1):
         if i > 0:
-            circle[2] *= beta
+            new_circle[2] *= beta
 
         new_circle, new_value, jiggle_intermediates = jiggle_circle(
-            grey, circle, mode=mode, alpha=alpha, 
+            grey, new_circle, mode=mode, alpha=alpha, 
             strip_width_to_radius_ratio=strip_width_to_radius_ratio, return_mean_value=True,
             return_intermediates=True, view_mask=view_mask)
         if jiggle_intermediates:
