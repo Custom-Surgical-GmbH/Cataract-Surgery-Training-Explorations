@@ -157,7 +157,7 @@ def tighten_circle(grey, best_circle, mode='min', max_iter=30, alpha=0.2, beta=0
         circle = new_circle
         last_value = new_value
     
-    print('tighten_circle iters:', i)
+    # print('tighten_circle iters:', i)
 
     if return_intermediates:
         return circle, intermediates
