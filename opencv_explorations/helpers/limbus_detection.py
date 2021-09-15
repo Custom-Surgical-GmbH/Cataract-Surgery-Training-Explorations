@@ -5,14 +5,18 @@ import numpy as np
 from .misc import get_in_out_intensity_diff
 
 def detect_limbus(gray, return_all=False, validation='first', considered_ratio_s=0.05, 
-        validation_mode='max', validation_value_thresh=None, view_mask=None):
+        validation_mode='max', validation_value_thresh=None, view_mask=None,
+        min_radius_ratio=1/40, max_radius_ratio=1.0):
     assert validation_mode in ('min', 'max'), 'validation_mode \'%s\' is not supported' % validation_mode
+
+    min_radius = np.min(gray.shape)*min_radius_ratio
+    max_radius = np.max(gray.shape)*max_radius_ratio
 
     circles = cv2.HoughCircles(
         cv2.GaussianBlur(255 - gray, ksize=(0,0), sigmaX=2),
         cv2.HOUGH_GRADIENT, dp=1, minDist=1,
         param1=50, param2=40,
-        minRadius=np.min(gray.shape)//40, maxRadius=np.max(gray.shape[0])
+        minRadius=round(min_radius), maxRadius=round(max_radius)
     )
     
     if circles is None:

@@ -3,15 +3,15 @@ import cv2
 import numpy as np
 
 def get_avg_laplacian(laplacian, center, radius):
-    mask = np.zeros(laplacian.shape, dtype=np.byte)
-    cv2.circle(mask, center, radius, 1)
-    return np.mean(np.abs(laplacian[mask == 1]))
+    mask = np.zeros(laplacian.shape, dtype=np.uint8)
+    cv2.circle(mask, center, radius, 255, thickness=cv2.FILLED)
+    return np.mean(np.abs(laplacian[mask == 255]))
 
 
 def get_mean_intensity(grey, center, radius, width_to_radius_ratio=0.05, mode='out'):
     assert mode in ('in', 'out', 'filled'), 'mode \'%s\' is not supported' % mode
      
-    mask = np.zeros(grey.shape, dtype=np.byte)
+    mask = np.zeros(grey.shape, dtype=np.uint8)
     width = int(width_to_radius_ratio*radius)
     
     if mode == 'in':
@@ -19,20 +19,20 @@ def get_mean_intensity(grey, center, radius, width_to_radius_ratio=0.05, mode='o
     elif mode == 'out':
         cv2.circle(mask, center, radius + (width//2), 1, thickness=width)
     elif mode == 'filled':
-        cv2.circle(mask, center, radius, 1, thickness=cv2.FILLED)
-    return np.mean(grey[mask == 1])
+        cv2.circle(mask, center, radius, 255, thickness=cv2.FILLED)
+    return np.mean(grey[mask == 255])
 
 
 def get_circle_in_strip_out_intensity_diff(grey, center, radius, strip_width_to_radius_ratio=0.04, metric='in_out'):
     strip_width = int(strip_width_to_radius_ratio*radius)
 
-    mask = np.zeros(grey.shape, dtype=np.byte)
-    cv2.circle(mask, center, radius, 1, thickness=cv2.FILLED)
-    in_intensity = np.mean(grey[mask == 1])
+    mask = np.zeros(grey.shape, dtype=np.uint8)
+    cv2.circle(mask, center, radius, 255, thickness=cv2.FILLED)
+    in_intensity = np.mean(grey[mask == 255])
     
-    mask = np.zeros(grey.shape, dtype=np.byte)
-    cv2.circle(mask, center, radius + (strip_width//2), 1, thickness=strip_width)
-    out_intensity = np.mean(grey[mask == 1])
+    mask = np.zeros(grey.shape, dtype=np.uint8)
+    cv2.circle(mask, center, radius + (strip_width//2), 255, thickness=strip_width)
+    out_intensity = np.mean(grey[mask == 255])
     
     assert metric in ('in_out', 'out_in'), 'metric \'%s\' is not supported' % metric
     
@@ -51,22 +51,22 @@ def get_in_out_intensity_diff(grey, center, radius, view_mask=None):
 
     circle_width = int(CIRCLE_WIDTH_TO_RADIUS_RATIO*radius)
     
-    mask = np.zeros(grey.shape, dtype=np.byte)
-    cv2.circle(mask, center, radius - (circle_width//2), 1, thickness=circle_width)
+    mask = np.zeros(grey.shape, dtype=np.uint8)
+    cv2.circle(mask, center, radius - (circle_width//2), 255, thickness=circle_width)
     # print('1. mask before', cv2.countNonZero(mask))
     if view_mask is not None:
         mask = mask & view_mask
         # print(cv2.countNonZero(view_mask))
         # print('1. mask after', cv2.countNonZero(mask))
-    in_intensity = np.mean(grey[mask == 1])
+    in_intensity = np.mean(grey[mask == 255])
     
-    mask = np.zeros(grey.shape, dtype=np.byte)
-    cv2.circle(mask, center, radius + (circle_width//2), 1, thickness=circle_width)
+    mask = np.zeros(grey.shape, dtype=np.uint8)
+    cv2.circle(mask, center, radius + (circle_width//2), 255, thickness=circle_width)
     # print('2. mask before', cv2.countNonZero(mask))
     if view_mask is not None:
         mask = mask & view_mask
         # print('2. mask after', cv2.countNonZero(mask))
-    out_intensity = np.mean(grey[mask == 1])
+    out_intensity = np.mean(grey[mask == 255])
 
     return out_intensity - in_intensity
 
@@ -82,9 +82,9 @@ def jiggle_circle(grey, best_circle, mode='min', max_iter=30, alpha=0.2, strip_w
     # center
     for i in range(max_iter):
         # pre edge treatment
-        mask = np.zeros(grey.shape, dtype=np.byte)
-        cv2.circle(mask, (round(circle[0]), round(circle[1])), round(circle[2]) + strip_width//2, 1, strip_width)
-        moments = cv2.moments(grey*mask, False)
+        mask = np.zeros(grey.shape, dtype=np.uint8)
+        cv2.circle(mask, (round(circle[0]), round(circle[1])), round(circle[2]) + strip_width//2, 255, strip_width)
+        moments = cv2.moments(grey*(mask == 255), False)
         
         # edge treatment
         mean_value = moments['m00']/cv2.countNonZero(mask)
@@ -93,9 +93,9 @@ def jiggle_circle(grey, best_circle, mode='min', max_iter=30, alpha=0.2, strip_w
         padding = round(circle[2])*2 + strip_width*2
         im_border = cv2.copyMakeBorder(grey, padding, padding, padding, padding, 
                                     cv2.BORDER_CONSTANT, value=round(mean_value))
-        mask = np.zeros(im_border.shape, dtype=np.byte)
-        cv2.circle(mask, (round(circle[0]) + padding, round(circle[1]) + padding), round(circle[2]) + strip_width//2, 1, strip_width)
-        moments = cv2.moments(im_border*mask, False)
+        mask = np.zeros(im_border.shape, dtype=np.uint8)
+        cv2.circle(mask, (round(circle[0]) + padding, round(circle[1]) + padding), round(circle[2]) + strip_width//2, 255, strip_width)
+        moments = cv2.moments(im_border*(mask == 255), False)
 
         # post edge treatment
         direction = np.array((moments['m10']/moments['m00'] - circle[0] - padding,
