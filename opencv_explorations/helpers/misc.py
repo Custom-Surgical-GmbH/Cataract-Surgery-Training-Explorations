@@ -1,6 +1,7 @@
 
 import cv2
 import numpy as np
+from scipy.spatial.distance import cdist, euclidean
 
 def get_avg_laplacian(laplacian, center, radius):
     mask = np.zeros(laplacian.shape, dtype=np.uint8)
@@ -187,4 +188,37 @@ def repair_bbox(bbox, max_width, max_height, max_consider_square_ratio=1.1):
         new_bbox[1] = -square_size + bbox[3]
         
     return tuple(new_bbox)
+
+def is_circle_enclosed(circle1, circle2):
+    p = circle1[:2] - circle2[:2]
     
+    return p[0]**2 + p[1]**2 <= (circle2[2] - circle1[2])**2
+    
+
+def geometric_median(X, eps=1e-5):
+    y = np.mean(X, 0)
+
+    while True:
+        D = cdist(X, [y])
+        nonzeros = (D != 0)[:, 0]
+
+        Dinv = 1 / D[nonzeros]
+        Dinvs = np.sum(Dinv)
+        W = Dinv / Dinvs
+        T = np.sum(W * X[nonzeros], 0)
+
+        num_zeros = len(X) - np.sum(nonzeros)
+        if num_zeros == 0:
+            y1 = T
+        elif num_zeros == len(X):
+            return y
+        else:
+            R = (T - y) * Dinvs
+            r = np.linalg.norm(R)
+            rinv = 0 if r == 0 else num_zeros/r
+            y1 = max(0, 1-rinv)*T + min(1, rinv)*y
+
+        if euclidean(y, y1) < eps:
+            return y1
+
+        y = y1
