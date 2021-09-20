@@ -4,7 +4,7 @@ import numpy as np
 
 from .misc import get_in_out_intensity_diff
 
-def detect_limbus(gray, return_all=False, validation='first', considered_ratio_s=0.05, 
+def detect_circle(gray, return_all=False, validation='first', considered_ratio_s=0.05, 
         validation_mode='max', validation_value_thresh=None, view_mask=None,
         min_radius_ratio=1/40, max_radius_ratio=1.0):
     assert validation_mode in ('min', 'max'), 'validation_mode \'%s\' is not supported' % validation_mode
@@ -61,3 +61,47 @@ def detect_limbus(gray, return_all=False, validation='first', considered_ratio_s
                 best_circle_index = np.argmax(in_out_diff_intensities)
 
         return considered_circles[best_circle_index]
+
+
+def detect_pupil_thresh(hsv, lower_thresh, upper_thresh, pca_correction=False, pca_correction_ratio=1.0):
+    pupil_thres = cv2.inRange(hsv, lower_thresh, upper_thresh)
+
+    # morphological processing
+    kernel = np.ones((3,3),np.uint8) # could be automatically set based on image moments
+    pupil_thres = cv2.morphologyEx(pupil_thres, cv2.MORPH_OPEN, kernel)
+    pupil_thres = cv2.morphologyEx(pupil_thres, cv2.MORPH_CLOSE, kernel, iterations=3)
+
+    # pca
+    points = np.array((np.where(pupil_thres == 255)[1], np.where(pupil_thres == 255)[0])).T
+    points = points.astype(np.float32)
+    if points.size == 0:
+        return None
+
+    mean = np.empty((0))
+    mean, eigenvectors, eigenvalues = cv2.PCACompute2(points, mean)
+    mean = mean[0]
+
+    # correction
+    if pca_correction and eigenvalues[1][0]/eigenvalues[0][0] > pca_correction_ratio: 
+        pca_correction = False
+
+    if not pca_correction:
+        radius = np.sum(np.sqrt(eigenvalues))
+        return np.append(mean, radius)
+    else:
+        mean_shift_scale = 2*(np.sqrt(eigenvalues[0][0]) - np.sqrt(eigenvalues[1][0]))
+        mean_shift = mean_shift_scale*eigenvectors[1]
+
+        # determining correct sign
+        image_center = np.array((hsv.shape[1], hsv.shape[0]), dtype=np.float32)/2
+        mean_corrected1 = mean - mean_shift
+        mean_corrected2 = mean + mean_shift
+
+        mean_corrected = None
+        if np.linalg.norm(mean_corrected1 - image_center) > np.linalg.norm(mean_corrected2 - image_center):
+            mean_corrected = mean_corrected1
+        else:
+            mean_corrected = mean_corrected2
+        
+        radius = 2*np.sqrt(eigenvalues[0][0])
+        return np.append(mean_corrected, radius)
