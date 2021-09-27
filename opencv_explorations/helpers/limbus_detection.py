@@ -63,16 +63,14 @@ def detect_circle(gray, return_all=False, validation='first', considered_ratio_s
         return considered_circles[best_circle_index]
 
 
-def detect_pupil_thresh(hsv, lower_thresh, upper_thresh, pca_correction=False, pca_correction_ratio=1.0):
-    pupil_thres = cv2.inRange(hsv, lower_thresh, upper_thresh)
-
+def detect_pupil_thresh(pupil_thres_mask, pca_correction=False, pca_correction_ratio=1.0):
     # morphological processing
     kernel = np.ones((3,3),np.uint8) # could be automatically set based on image moments
-    pupil_thres = cv2.morphologyEx(pupil_thres, cv2.MORPH_OPEN, kernel)
-    pupil_thres = cv2.morphologyEx(pupil_thres, cv2.MORPH_CLOSE, kernel, iterations=3)
+    pupil_thres_mask = cv2.morphologyEx(pupil_thres_mask, cv2.MORPH_OPEN, kernel)
+    pupil_thres_mask = cv2.morphologyEx(pupil_thres_mask, cv2.MORPH_CLOSE, kernel, iterations=3)
 
     # pca
-    points = np.array((np.where(pupil_thres == 255)[1], np.where(pupil_thres == 255)[0])).T
+    points = np.array((np.where(pupil_thres_mask == 255)[1], np.where(pupil_thres_mask == 255)[0])).T
     points = points.astype(np.float32)
     if points.size == 0:
         return None
@@ -93,7 +91,7 @@ def detect_pupil_thresh(hsv, lower_thresh, upper_thresh, pca_correction=False, p
         mean_shift = mean_shift_scale*eigenvectors[1]
 
         # determining correct sign
-        image_center = np.array((hsv.shape[1], hsv.shape[0]), dtype=np.float32)/2
+        image_center = np.array((pupil_thres_mask.shape[1], pupil_thres_mask.shape[0]), dtype=np.float32)/2
         mean_corrected1 = mean - mean_shift
         mean_corrected2 = mean + mean_shift
 
