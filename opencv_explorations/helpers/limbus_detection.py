@@ -63,11 +63,12 @@ def detect_circle(gray, return_all=False, validation='first', considered_ratio_s
         return considered_circles[best_circle_index]
 
 
-def detect_pupil_thresh(pupil_thres_mask, pca_correction=False, pca_correction_ratio=1.0):
+def detect_pupil_thresh(pupil_thres_mask, pca_correction=False, pca_correction_ratio=1.0, morphology=True):
     # morphological processing
-    kernel = np.ones((3,3),np.uint8) # could be automatically set based on image moments
-    pupil_thres_mask = cv2.morphologyEx(pupil_thres_mask, cv2.MORPH_OPEN, kernel)
-    pupil_thres_mask = cv2.morphologyEx(pupil_thres_mask, cv2.MORPH_CLOSE, kernel, iterations=3)
+    if morphology:
+        kernel = np.ones((3,3),np.uint8) # could be automatically set based on image moments
+        pupil_thres_mask = cv2.morphologyEx(pupil_thres_mask, cv2.MORPH_OPEN, kernel)
+        pupil_thres_mask = cv2.morphologyEx(pupil_thres_mask, cv2.MORPH_CLOSE, kernel, iterations=3)
 
     # pca
     points = np.array((np.where(pupil_thres_mask == 255)[1], np.where(pupil_thres_mask == 255)[0])).T
