@@ -5,7 +5,7 @@ import numpy as np
 from .misc import get_in_out_intensity_diff
 
 def detect_circle(gray, return_all=False, validation='first', considered_ratio_s=0.05, 
-        validation_mode='max', validation_value_thresh=None, view_mask=None,
+        validation_mode='max', validation_value_thresh=None, view_mask=None, circle_width_to_radius_ratio=None,
         min_radius_ratio=1/40, max_radius_ratio=1.0):
     assert validation_mode in ('min', 'max'), 'validation_mode \'%s\' is not supported' % validation_mode
 
@@ -42,23 +42,26 @@ def detect_circle(gray, return_all=False, validation='first', considered_ratio_s
                 gray,
                 tuple(np.around(circle[:2]).astype('int')),
                 np.round(circle[2]).astype('int'),
-                view_mask=view_mask
+                view_mask=view_mask,
+                circle_width_to_radius_ratio=circle_width_to_radius_ratio
             )
             
-        # print('max_value ', np.max(in_out_diff_intensities))
+        if np.isnan(in_out_diff_intensities).all():
+            return None
+
         optimal_value = None
         if validation_mode == 'min':
             optimal_value = np.nanmin(in_out_diff_intensities)
             if validation_value_thresh is not None and optimal_value > validation_value_thresh:
                 return None
             else:
-                best_circle_index = np.argmin(in_out_diff_intensities)
+                best_circle_index = np.nanargmin(in_out_diff_intensities)
         elif validation_mode == 'max':
             optimal_value = np.nanmax(in_out_diff_intensities)
             if validation_value_thresh is not None and optimal_value < validation_value_thresh:
                 return None
             else:
-                best_circle_index = np.argmax(in_out_diff_intensities)
+                best_circle_index = np.nanargmax(in_out_diff_intensities)
 
         return considered_circles[best_circle_index]
 

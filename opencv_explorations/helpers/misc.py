@@ -45,29 +45,29 @@ def get_circle_in_strip_out_intensity_diff(grey, center, radius, strip_width_to_
     return None
 
 
-CIRCLE_WIDTH_TO_RADIUS_RATIO = 0.04
-def get_in_out_intensity_diff(grey, center, radius, view_mask=None):
+CIRCLE_WIDTH_TO_RADIUS_RATIO_DEFAULT = 0.04
+def get_in_out_intensity_diff(grey, center, radius, view_mask=None, circle_width_to_radius_ratio=None):
     if view_mask is not None:
         assert grey.shape == view_mask.shape, 'grey must have the same shape as view_mask'
 
-    circle_width = int(CIRCLE_WIDTH_TO_RADIUS_RATIO*radius)
+    if circle_width_to_radius_ratio is None:
+        circle_width_to_radius_ratio = CIRCLE_WIDTH_TO_RADIUS_RATIO_DEFAULT
+    circle_width = round(circle_width_to_radius_ratio*radius)
     
     mask = np.zeros(grey.shape, dtype=np.uint8)
     cv2.circle(mask, center, radius - (circle_width//2), 255, thickness=circle_width)
-    # print('1. mask before', cv2.countNonZero(mask))
     if view_mask is not None:
         mask = mask & view_mask
-        # print(cv2.countNonZero(view_mask))
-        # print('1. mask after', cv2.countNonZero(mask))
     in_intensity = np.mean(grey[mask == 255])
+    # print('in_intensity', cv2.countNonZero(mask), in_intensity)
     
     mask = np.zeros(grey.shape, dtype=np.uint8)
     cv2.circle(mask, center, radius + (circle_width//2), 255, thickness=circle_width)
     # print('2. mask before', cv2.countNonZero(mask))
     if view_mask is not None:
         mask = mask & view_mask
-        # print('2. mask after', cv2.countNonZero(mask))
     out_intensity = np.mean(grey[mask == 255])
+    # print('out_intensity', cv2.countNonZero(mask), out_intensity)
 
     return out_intensity - in_intensity
 
