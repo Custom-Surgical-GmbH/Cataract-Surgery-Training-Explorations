@@ -1,3 +1,4 @@
 .ipynb_checkpoints
 opencv_explorations/data/
 **/__pycache__/
+.venv/
