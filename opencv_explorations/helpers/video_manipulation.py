@@ -1,6 +1,7 @@
 
 import cv2
 
+
 # frame_start inclusive, frame_end exclusive
 def extract_consecutive(video_path, frame_start, frame_end, mode='bgr'):
     assert frame_end > frame_start >= 0
@@ -14,7 +15,7 @@ def extract_consecutive(video_path, frame_start, frame_end, mode='bgr'):
         ret, base = cap.read()
         if not ret:
             break
-        
+
         if frame_index == frame_end:
             break
 
@@ -28,14 +29,14 @@ def extract_consecutive(video_path, frame_start, frame_end, mode='bgr'):
             elif mode == 'gray':
                 frames.append(cv2.cvtColor(base, cv2.COLOR_BGR2GRAY))
             elif mode == 'h':
-                frames.append(cv2.cvtColor(base, cv2.COLOR_BGR2HSV)[:,:,0])
+                frames.append(cv2.cvtColor(base, cv2.COLOR_BGR2HSV)[:, :, 0])
             elif mode == 's':
-                frames.append(cv2.cvtColor(base, cv2.COLOR_BGR2HSV)[:,:,1])
+                frames.append(cv2.cvtColor(base, cv2.COLOR_BGR2HSV)[:, :, 1])
             elif mode == 'v':
-                frames.append(cv2.cvtColor(base, cv2.COLOR_BGR2HSV)[:,:,2])
+                frames.append(cv2.cvtColor(base, cv2.COLOR_BGR2HSV)[:, :, 2])
 
         frame_index += 1
 
-    cap.release() 
-    
+    cap.release()
+
     return frames

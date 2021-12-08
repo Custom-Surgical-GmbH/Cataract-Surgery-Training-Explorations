@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 
+
 def estimate_transform(frame1, frame2):
     # Initiate SIFT detector
     sift = cv2.SIFT_create(contrastThreshold=0.01)
@@ -17,7 +18,7 @@ def estimate_transform(frame1, frame2):
     matches = bf.knnMatch(des1, des2, k=2)
     # Apply ratio test
     good = []
-    for m,n in matches:
+    for m, n in matches:
         if m.distance < 0.75*n.distance:
             good.append([m])
 
@@ -38,19 +39,21 @@ def estimate_transform(frame1, frame2):
 
     return transform
 
-def get_transform_info(transform, parameter='all'):
-    assert parameter in ('all', 'scale', 'angle', 'translation'), 'unsupported parameter \'%s\'' % parameter
 
-    a = transform[0,0]
-    b = transform[1,0]
+def get_transform_info(transform, parameter='all'):
+    assert parameter in ('all', 'scale', 'angle',
+                         'translation'), 'unsupported parameter \'%s\'' % parameter
+
+    a = transform[0, 0]
+    b = transform[1, 0]
     alpha = np.arctan2(b, a)
     s = a / np.cos(alpha)
-    
+
     if parameter == 'all':
-        return s, alpha, transform[:,2]
+        return s, alpha, transform[:, 2]
     elif parameter == 'scale':
         return s
     elif parameter == 'angle':
         return alpha
     elif parameter == 'translatioin':
-        return transform[:,2]
+        return transform[:, 2]

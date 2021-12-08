@@ -1,12 +1,15 @@
 appnope==0.1.2
 argon2-cffi==21.1.0
 attrs==21.2.0
+autoflake==1.4
+autopep8==1.6.0
 backcall==0.2.0
 beniget==0.4.1
 bleach==4.1.0
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.7
+cleanipynb==0.4.2
 cycler==0.11.0
 Cython==0.29.24
 debugpy==1.5.1
@@ -16,6 +19,7 @@ entrypoints==0.3
 gast==0.5.3
 idna==3.3
 imageio==2.10.4
+importanize==0.7.0
 ipykernel==6.5.0
 ipython==7.29.0
 ipython-genutils==0.2.0
@@ -29,11 +33,14 @@ jupyter-core==4.9.1
 jupyterlab-pygments==0.1.2
 jupyterlab-widgets==1.0.2
 jupyterthemes==0.20.0
+jupytext==1.13.3
 kiwisolver==1.3.2
 lesscpy==0.15.0
+markdown-it-py==1.1.0
 MarkupSafe==2.0.1
 matplotlib==3.4.3
 matplotlib-inline==0.1.3
+mdit-py-plugins==0.3.0
 mistune==0.8.4
 nbclient==0.5.8
 nbconvert==6.3.0
@@ -48,6 +55,7 @@ packaging==21.2
 pandas==1.3.4
 pandocfilters==1.5.0
 parso==0.8.2
+pathlib2==2.3.6
 patsy==0.5.2
 pexpect==4.8.0
 pickleshare==0.7.5
@@ -57,7 +65,9 @@ prometheus-client==0.12.0
 prompt-toolkit==3.0.22
 ptyprocess==0.7.0
 pybind11==2.8.1
+pycodestyle==2.8.0
 pycparser==2.21
+pyflakes==2.4.0
 Pygments==2.10.0
 pyparsing==2.4.7
 pyrsistent==0.18.0
@@ -66,6 +76,7 @@ pythran==0.10.0
 pytz==2021.3
 pywatchman==1.4.1
 PyWavelets==1.2.0
+PyYAML==6.0
 pyzmq==22.3.0
 requests==2.26.0
 scikit-learn==1.0.1
@@ -77,6 +88,7 @@ terminado==0.12.1
 testpath==0.5.0
 threadpoolctl==3.0.0
 tifffile==2021.11.2
+toml==0.10.2
 tornado==6.1
 traitlets==5.1.1
 urllib3==1.26.7
