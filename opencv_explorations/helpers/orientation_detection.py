@@ -118,7 +118,6 @@ def detect_markers_entropy(hsv, limbus_center, limbus_radius, return_verbose=Fal
     max_entropy = np.max(entropy)
     optimal_degs = np.where(entropy > (max_entropy + ENTROPY_EPS))
     optimal_deg = np.median(optimal_degs)
-#     print(optimal_deg, optimal_degs)
 
     rad = 2*np.pi*optimal_deg/entropy.size
     loc = limbus_radius*np.array([np.cos(rad), -np.sin(rad)])
