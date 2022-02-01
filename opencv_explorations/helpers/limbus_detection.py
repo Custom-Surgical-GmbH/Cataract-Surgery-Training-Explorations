@@ -1,5 +1,6 @@
 
 import cv2
+from cv2 import resize
 import numpy as np
 
 from .misc import get_in_out_intensity_diff
@@ -7,15 +8,22 @@ from .misc import get_in_out_intensity_diff
 
 def detect_circle(gray, return_all=False, validation='first', considered_ratio_s=0.05,
                   validation_mode='max', validation_value_thresh=None, view_mask=None, circle_width_to_radius_ratio=None,
-                  min_radius_ratio=1/40, max_radius_ratio=1.0):
+                  min_radius_ratio=1/40, max_radius_ratio=1.0, max_processing_dim=None, gaussian_blur_sigma=2.0):
     assert validation_mode in (
         'min', 'max'), 'validation_mode \'%s\' is not supported' % validation_mode
+
+    scale = None
+    if max_processing_dim is not None:
+        scale = max_processing_dim / max(gray.shape)
+    else:
+        scale = 1.0
+    gray = cv2.resize(gray, (0, 0), fx=scale, fy=scale)
 
     min_radius = np.min(gray.shape)*min_radius_ratio
     max_radius = np.max(gray.shape)*max_radius_ratio
 
     circles = cv2.HoughCircles(
-        cv2.GaussianBlur(255 - gray, ksize=(0, 0), sigmaX=2),
+        cv2.GaussianBlur(255 - gray, ksize=(0, 0), sigmaX=gaussian_blur_sigma),
         cv2.HOUGH_GRADIENT, dp=1, minDist=1,
         param1=50, param2=40,
         minRadius=round(min_radius), maxRadius=round(max_radius)
@@ -26,12 +34,15 @@ def detect_circle(gray, return_all=False, validation='first', considered_ratio_s
 
     circles = circles[0]
     if return_all:
-        return circles
+        return [
+            circle / scale
+            for circle in circles
+        ]
 
     assert (validation in ('first', 'inout')
             ), f'unknown \'{validation}\' validation method'
     if validation == 'first':
-        return circles[0, :]
+        return circles[0, :] / scale
     elif validation == 'inout':
         considered_ratio = considered_ratio_s
         while int(len(circles)*considered_ratio) == 0:
@@ -66,7 +77,7 @@ def detect_circle(gray, return_all=False, validation='first', considered_ratio_s
             else:
                 best_circle_index = np.nanargmax(in_out_diff_intensities)
 
-        return considered_circles[best_circle_index]
+        return considered_circles[best_circle_index] / scale
 
 
 def detect_pupil_thresh(pupil_thres_mask, pca_correction=False, pca_correction_ratio=1.0, morphology=True):
