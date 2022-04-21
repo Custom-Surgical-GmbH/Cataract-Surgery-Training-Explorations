@@ -1,6 +1,7 @@
 
 import numpy as np
 import cv2
+from sympy import li
 
 
 def get_transform_limbus(limbus_circle_from, limbus_circle_to):
@@ -33,6 +34,9 @@ def transform_keypoints(keypoints, transform):
 
 
 def get_transform_info(transform, verbose=False):
+    if transform is None:
+        return None
+
     a = transform[0, 0]
     b = transform[1, 0]
     alpha = np.arctan2(b, a)
@@ -96,15 +100,23 @@ def estimate_transformation_hybrid(keypoints_from, descriptors_from, limbus_circ
 def estimate_orientation_hybrid(keypoints_from, descriptors_from, limbus_circle_from,
                                 keypoints_to, descriptors_to, limbus_circle_to, verbose=False):
 
+    if any(arg is None for arg in (keypoints_from, descriptors_from, limbus_circle_from, keypoints_to, descriptors_to, limbus_circle_to)):
+        return None
+
     # BFMatcher with default params
     bf = cv2.BFMatcher()
     matches = bf.knnMatch(descriptors_from, descriptors_to, k=2)
 
-    # ratio test
-    good = []
-    for m, n in matches:
-        if m.distance < 0.75*n.distance:
-            good.append([m])
+    if matches is None:
+        return None
+
+    try:
+        good = []
+        for m, n in matches:
+            if m.distance < 0.75*n.distance:
+                good.append([m])
+    except ValueError:
+        return None
 
     if not good:
         return None
@@ -115,7 +127,12 @@ def estimate_orientation_hybrid(keypoints_from, descriptors_from, limbus_circle_
         keypoints_from, transform_no_rotation)
     transform_rotation, _ = estimate_transform_from_matches(
         keypoints_from_transformed, keypoints_to, good)
-    scale, translation, rotation = get_transform_info(transform_rotation)
+    ret = get_transform_info(transform_rotation)
+    
+    if ret is None:
+        return None
+
+    scale, translation, rotation = ret
 
     if verbose:
         return rotation, transform_rotation, transform_no_rotation
@@ -129,4 +146,46 @@ def transform_2d_matmul(t1, t2):
     t2 = np.concatenate((t2, last_row.copy()))
     ret = t1 @ t2
 
-    return ret[:2,:]
+    return ret[:2, :]
+
+
+def detect_orientation(gray, limbus_circle, baseline,
+                       limbus_radius_inflation=1.2):
+    if limbus_circle is None:
+        return None
+
+    baseline_keypoints, baseline_descriptors, baseline_limbus_circle = baseline
+
+    mask = np.zeros_like(gray)
+    mask = cv2.circle(mask, (round(limbus_circle[0]), round(limbus_circle[1])), round(
+        limbus_circle[2]*limbus_radius_inflation), 255, thickness=-1, lineType=cv2.LINE_AA)
+
+    kd = cv2.BRISK_create()
+    keypoints, descriptors = kd.detectAndCompute(gray, mask=mask)
+
+    rotation = estimate_orientation_hybrid(
+        baseline_keypoints, baseline_descriptors, baseline_limbus_circle,
+        keypoints, descriptors, limbus_circle,
+    )
+
+    if rotation is None:
+        return None
+
+    rad = np.pi * rotation / 180
+
+    return rad
+
+
+def establish_baseline(gray, limbus_circle,
+                       limbus_radius_inflation=1.2):
+    if limbus_circle is None:
+        return None
+
+    mask = np.zeros_like(gray)
+    mask = cv2.circle(mask, (round(limbus_circle[0]), round(limbus_circle[1])), round(
+        limbus_circle[2]*limbus_radius_inflation), 255, thickness=-1, lineType=cv2.LINE_AA)
+
+    kd = cv2.BRISK_create()
+    keypoints, descriptors = kd.detectAndCompute(gray, mask=mask)
+
+    return (keypoints, descriptors, limbus_circle)
